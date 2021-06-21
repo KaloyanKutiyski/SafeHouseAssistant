@@ -18,7 +18,6 @@ void loop()
 {
   sensorValueA = analogRead(MQ2A);
   Serial.println(sensorValueA);
-  delay(1000);
  
   if (sensorValueA > dangerLevel)
   {
@@ -31,4 +30,6 @@ void loop()
     digitalWrite(RELAY, HIGH);
     Serial.println("Current not Flowing");
   }
+ 
+ delay(1000);
 } 
