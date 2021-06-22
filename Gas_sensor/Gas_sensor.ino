@@ -4,12 +4,12 @@
 
 // You should get Auth Token in the Blynk App.
 // Go to the Project Settings (nut icon).
-char auth[] = "";
+char auth[] = "eSmfIcFcORGmqTnF2XPOCLDrrTT-Z66p";
 
 // Your WiFi credentials.
 // Set password to "" for open networks.
-char ssid[] = "";
-char pass[] = "";
+char ssid[] = "6П";
+char pass[] = "plsnosteal";
 
 #define MQ2A 34
 #define RELAY 26
@@ -21,6 +21,10 @@ int sensorValueA = 0;
 const int defaultDangerLevel = 1500;
 int dangerLevel = defaultDangerLevel;
 unsigned long last_stop = 0;
+
+BLYNK_WRITE(V1) {
+  dangerLevel = 1000 + 2 * (1023 - param.asInt());
+}
  
 void setup()
 {
@@ -44,7 +48,9 @@ void readRemoteInput()
 void readSensor()
 {
   sensorValueA = analogRead(MQ2A);
+  Serial.println("-------------------");
   Serial.println(sensorValueA);
+  Serial.printf("alarm trigger %i\n", dangerLevel);
  
   if (sensorValueA > dangerLevel)
   {
