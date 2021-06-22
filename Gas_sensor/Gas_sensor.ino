@@ -5,12 +5,12 @@
 
 // You should get Auth Token in the Blynk App.
 // Go to the Project Settings (nut icon).
-char auth[] = "eSmfIcFcORGmqTnF2XPOCLDrrTT-Z66p";
+char auth[] = "";
 
 // Your WiFi credentials.
 // Set password to "" for open networks.
-char ssid[] = "6П";
-char pass[] = "plsnosteal";
+char ssid[] = "";
+char pass[] = "";
 
 #define MQ2A 34
 #define RELAY 26
