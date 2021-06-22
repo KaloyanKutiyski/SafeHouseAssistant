@@ -1,6 +1,7 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <BlynkSimpleEsp32.h>
+#include <LiquidCrystal_I2C.h>
 
 // You should get Auth Token in the Blynk App.
 // Go to the Project Settings (nut icon).
@@ -14,8 +15,11 @@ char pass[] = "plsnosteal";
 #define MQ2A 34
 #define RELAY 26
 #define BTN_PIN 2
+#define SDA 21
+#define SCL 22
 
 BlynkTimer timer;
+LiquidCrystal_I2C lcd(0x27, 16, 2);  
 
 int sensorValueA = 0;
 const int defaultDangerLevel = 1500;
@@ -31,9 +35,12 @@ void setup()
  Serial.begin(115200);
  pinMode(MQ2A, INPUT);
  pinMode(RELAY, OUTPUT);
+ lcd.init();
+ lcd.backlight();
  Blynk.begin(auth, ssid, pass);
  timer.setInterval(500L, readSensor); // read sensors every 500ms
  timer.setInterval(100L, readRemoteInput); // read data from mobile device every 100ms
+ 
 }
 
 void readRemoteInput()
@@ -51,6 +58,16 @@ void readSensor()
   Serial.println("-------------------");
   Serial.println(sensorValueA);
   Serial.printf("alarm trigger %i\n", dangerLevel);
+
+  lcd.setCursor(0, 0);
+  lcd.print("Sensor:");
+  lcd.setCursor(12, 0);
+  lcd.print(sensorValueA);
+  
+  lcd.setCursor(0, 1);
+  lcd.print("Limit:");
+  lcd.setCursor(12, 1);
+  lcd.print(dangerLevel);
  
   if (sensorValueA > dangerLevel)
   {
