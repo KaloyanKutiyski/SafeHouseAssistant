@@ -5,12 +5,12 @@
 
 // You should get Auth Token in the Blynk App.
 // Go to the Project Settings (nut icon).
-char auth[] = "";
+char auth[] = "eSmfIcFcORGmqTnF2XPOCLDrrTT-Z66p";
 
 // Your WiFi credentials.
 // Set password to "" for open networks.
-char ssid[] = "";
-char pass[] = "";
+char ssid[] = "6П";
+char pass[] = "plsnosteal";
 
 #define MQ2A 34
 #define RELAY 26
@@ -25,6 +25,9 @@ int sensorValueA = 0;
 const int defaultDangerLevel = 1500;
 int dangerLevel = defaultDangerLevel;
 unsigned long last_stop = 0;
+bool muted;
+int secondsOnMute;
+int muteMillis = 10000;
 
 BLYNK_WRITE(V1) {
   dangerLevel = 1000 + 2 * (1023 - param.asInt());
@@ -55,34 +58,60 @@ void readRemoteInput()
 void readSensor()
 {
   sensorValueA = analogRead(MQ2A);
+  muted = millis() - last_stop <= muteMillis;
+  
   Serial.println("-------------------");
   Serial.println(sensorValueA);
   Serial.printf("alarm trigger %i\n", dangerLevel);
 
+  lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Sensor:");
-  lcd.setCursor(12, 0);
+  lcd.print("SENSOR:");
+  if (sensorValueA >= 1000){
+    lcd.setCursor(7, 0);
+  } else {
+    lcd.setCursor(8, 0);
+  }
   lcd.print(sensorValueA);
-  
-  lcd.setCursor(0, 1);
-  lcd.print("Limit:");
-  lcd.setCursor(12, 1);
+  lcd.setCursor(11, 0);
+  lcd.print("/");
+  lcd.setCursor(12, 0);
   lcd.print(dangerLevel);
+  lcd.setCursor(6, 1);
+  lcd.print("|");
+
+  if (muted) {
+    lcd.setCursor(7, 1);
+    lcd.print("MUTE:");
+    secondsOnMute = (muteMillis - millis() + last_stop) / 1000;
+    if (secondsOnMute >= 1000) {
+      lcd.setCursor(12, 1);
+    } else {
+      lcd.setCursor(13, 1);
+    }
+    lcd.print(secondsOnMute);
+  } else {
+    lcd.setCursor(8, 1);
+    lcd.print("SOUND ON");
+  }
  
   if (sensorValueA > dangerLevel)
   {
-    if(millis() - last_stop > 10000)
+    lcd.setCursor(0, 1);
+    lcd.print("DANGER");
+    if (!muted)
     {
       digitalWrite(RELAY, LOW);
       Serial.println("Current Flowing");
     } else {
       Serial.println("muted, time remaining:");
-      Serial.println(10000 - (millis() - last_stop));
+      Serial.println(muteMillis - (millis() - last_stop));
     }
   }
- 
   else
   {
+    lcd.setCursor(1, 1);
+    lcd.print("SAFE");
     digitalWrite(RELAY, HIGH);
     Serial.println("Current not Flowing");
   }
