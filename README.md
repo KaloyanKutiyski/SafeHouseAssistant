@@ -2,7 +2,7 @@
 ### Made for educational purposes
 ##### Developed by Kaloyan Kutiyski and Viktor Venkov
 -----------------------------------------------
-This project is designed to work on ESP32 with WiFi modul.
+This project is designed to work on ESP32 with WiFi module.
 
 You can connect it to your mobile device using the [Blynk](https://blynk.io/ "Blynk") app.
 
