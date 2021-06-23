@@ -18,6 +18,10 @@ char pass[] = "";
 #define SDA 21
 #define SCL 22
 #define GAUGE 2
+#define SENSITIVITY_SLIDER_PIN V1
+#define MUTE_DURATION_PIN V3
+
+#define MILLIS_IN_SEC 1000
 
 BlynkTimer timer;
 LiquidCrystal_I2C lcd(0x27, 16, 2);  
@@ -29,14 +33,16 @@ unsigned long last_stop = 0;
 unsigned long last_notify = 0;
 bool muted;
 int secondsOnMute;
-int muteMillis = 10000;
+int muteMillis = 10 * MILLIS_IN_SEC;
 int muteMillisSetting;
 
-BLYNK_WRITE(V1) {
+BLYNK_WRITE(SENSITIVITY_SLIDER_PIN)
+{
   dangerLevel = param.asInt();
 }
-BLYNK_WRITE(V3) {
-  muteMillisSetting = param.asInt()*1000;
+BLYNK_WRITE(MUTE_DURATION_PIN)
+{
+  muteMillisSetting = param.asInt() * MILLIS_IN_SEC;
 }
  
 void setup()
@@ -48,10 +54,10 @@ void setup()
  Blynk.begin(auth, ssid, pass);
  timer.setInterval(500L, readSensor); // read sensors every 500ms
  timer.setInterval(100L, readRemoteInput); // read data from mobile device every 100ms
- timer.setInterval(100L, printToPhone);
+ timer.setInterval(100L, printDataToDevice); // prints data every 100ms to device
 }
 
-void printToPhone()
+void printDataToDevice()
 {
   Blynk.virtualWrite(GAUGE, sensorValueA);
 }
@@ -59,25 +65,24 @@ void printToPhone()
 void readRemoteInput()
 {
   boolean isPressed = (digitalRead(BTN_PIN) == LOW);
-  if (!isPressed) {
+  if (!isPressed)
+  {
     muteMillis = muteMillisSetting;
     last_stop = millis();
   }
 }
+
 void notify(const char* msg)
 {
-  if(millis()-last_notify > 60000)
+  if(millis()-last_notify > 60 * MILLIS_IN_SEC)
   {
     Blynk.notify(msg);
     last_notify = millis();
   }
 }
 
-void readSensor()
+void printOnLCD()
 {
-  sensorValueA = analogRead(MQ2A);
-  muted = millis() - last_stop <= muteMillis;
-  
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("SENSOR:");
@@ -94,48 +99,68 @@ void readSensor()
   lcd.setCursor(6, 1);
   lcd.print("|");
 
-  if (muted) {
+  if (muted)
+  {
     lcd.setCursor(7, 1);
     lcd.print("MUTE:");
-    secondsOnMute = (muteMillis - millis() + last_stop) / 1000;
-    if (secondsOnMute >= 1000) {
+    secondsOnMute = (muteMillis - millis() + last_stop) / MILLIS_IN_SEC;
+    if (secondsOnMute >= 1000)
+    {
       lcd.setCursor(12, 1);
-    } else {
+    }
+    else
+    {
       lcd.setCursor(13, 1);
     }
     lcd.print(secondsOnMute);
-  } else {
+  }
+  else
+  {
     lcd.setCursor(8, 1);
     lcd.print("SOUND ON");
   }
+}
 
+void printDangerLvlLCD(const char* msg)
+{
+  lcd.setCursor(0, 1);
+  lcd.print(msg);
+}
+
+void readSensor()
+{
+  sensorValueA = analogRead(MQ2A);
+  muted = millis() - last_stop <= muteMillis;
+
+  printOnLCD();
 
   if (sensorValueA > dangerLevel)
   {
-    lcd.setCursor(0, 1);
-    lcd.print("DANGER");
+    printDangerLvlLCD("DANGER");
     
     if (!muted)
     {
       notify("Hazardous concentrations of smoke and/or volatile gasses detected\nAlarm is on");
       digitalWrite(RELAY, LOW);
-    } else {
+    }
+    else 
+    {
       notify("High concentrations of smoke and/or volatile gasses detected\nAlarm is off");
       digitalWrite(RELAY, HIGH);
     }
-  } else if ((double) sensorValueA > 0.8  * (double) dangerLevel) {
-    if (!muted){
+  }
+  else if ((double) sensorValueA > 0.8  * (double) dangerLevel)
+  {
+    if (!muted)
+    {
       notify("Abnormal concentrations of smoke and/or volatile gasses detected");
     }
-    lcd.setCursor(0, 1);
-    lcd.print("WRNING");
+    printDangerLvlLCD("WRNING");
   }
   else
   {
-    lcd.setCursor(1, 1);
-    lcd.print("SAFE");
+    printDangerLvlLCD("SAFE");
     digitalWrite(RELAY, HIGH);
-
   }
 }
  
