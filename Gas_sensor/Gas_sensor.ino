@@ -55,6 +55,14 @@ void setup()
  timer.setInterval(500L, readSensor); // read sensors every 500ms
  timer.setInterval(100L, readRemoteInput); // read data from mobile device every 100ms
  timer.setInterval(100L, printDataToDevice); // prints data every 100ms to device
+ timer.setInterval(1000L, millisOverflowProtection); // the millis() function overflows roughly every 7 weeks
+  // in such case, if the timestamps for muting and notifying are not reset, those functionalities may stop working.
+}
+
+void millisOverflowProtection() {
+  if (millis() < last_stop || millis() < last_notify) {
+    last_stop = last_notify = 0;
+  }
 }
 
 void printDataToDevice()
