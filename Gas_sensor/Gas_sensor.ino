@@ -82,7 +82,7 @@ void readRemoteInput()
 
 void notify(const char* msg)
 {
-  if(millis()-last_notify > 60 * MILLIS_IN_SEC)
+  if(Blynk.connected() && millis()-last_notify > 60 * MILLIS_IN_SEC) 
   {
     Blynk.notify(msg);
     last_notify = millis();
@@ -174,6 +174,12 @@ void readSensor()
  
 void loop()
 {
-  Blynk.run();
-  timer.run();
+  if (Blynk.connected()) {
+    Blynk.run();
+    timer.run();
+  } else {
+    readSensor();
+    printOnLCD();
+    Blynk.connect();
+  }
 } 
